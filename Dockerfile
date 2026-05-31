@@ -1,6 +1,6 @@
 # This file is a part of NEO-WZML (github.com/irisXDR/NEO-WZML)
 
-FROM irisxdr/neo-wzml:latest
+FROM pro97775/neo-wzml:latest
 
 WORKDIR /usr/src/app
 
