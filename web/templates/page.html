@@ -1,5 +1,3 @@
-<!-- This file is a part of NEO-WZML (github.com/irisXDR/NEO-WZML) -->
-
 <!doctype html>
 <html lang="en">
   <head>
@@ -967,6 +965,12 @@
         box-shadow: 0 10px 26px rgba(239, 68, 68, 0.35);
       }
 
+      #rangeInput:focus {
+        outline: none;
+        border-color: var(--accent-primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+      }
+
       @media (max-width: 640px) {
         .container {
           padding: 1rem 1rem 8rem;
@@ -1221,6 +1225,25 @@
       >
         <section id="fileSection" class="card">
           <div class="file-card">
+            <div class="range-selection-container" style="margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);">
+              <input
+                type="text"
+                id="rangeInput"
+                class="bulk-btn"
+                style="width: 180px; text-align: left; padding: 0.5rem 0.75rem; letter-spacing: normal; background: var(--bg-secondary); color: var(--text-primary);"
+                placeholder="e.g., 1-10, 15, 20-22"
+                title="Enter file numbers or ranges, separated by commas."
+              />
+              <button
+                type="button"
+                id="applyRangeBtn"
+                class="bulk-btn"
+                title="Apply range selection"
+              >
+                <i class="fas fa-filter"></i>
+                <span>Apply Range</span>
+              </button>
+            </div>
             <div id="fileTree"></div>
           </div>
         </section>
@@ -1838,6 +1861,56 @@
           updateAllFolderStates();
           checkingfiles();
           checked_size();
+        });
+
+        $("#applyRangeBtn").click(function () {
+          const rangeStr = $("#rangeInput").val().trim();
+          if (!rangeStr) {
+            alert("Please enter a range or file number.");
+            return;
+          }
+
+          const indicesToSelect = new Set();
+          try {
+            const parts = rangeStr.split(',');
+            parts.forEach(part => {
+              part = part.trim();
+              if (part.includes('-')) {
+                const [start, end] = part.split('-').map(num => parseInt(num.trim(), 10));
+                if (isNaN(start) || isNaN(end) || start > end || start < 1) {
+                  throw new Error(`Invalid range: "${part}"`);
+                }
+                for (let i = start; i <= end; i++) {
+                  indicesToSelect.add(i);
+                }
+              } else {
+                const num = parseInt(part, 10);
+                if (isNaN(num) || num < 1) {
+                  throw new Error(`Invalid number: "${part}"`);
+                }
+                indicesToSelect.add(num);
+              }
+            });
+
+            const $fileCheckboxes = $("input[name^='filenode_']");
+            if ($fileCheckboxes.length === 0) {
+              alert("No files available to select.");
+              return;
+            }
+
+            $fileCheckboxes.each(function (index) {
+              if (indicesToSelect.has(index + 1)) {
+                $(this).prop("checked", true);
+              }
+            });
+
+            updateAllFolderStates();
+            checkingfiles();
+            checked_size();
+            $("#rangeInput").val('');
+          } catch (error) {
+            alert(`Invalid Input: ${error.message}.\nPlease use a format like "1-10, 15, 20-22".`);
+          }
         });
 
         $("#scrollUp").click(function () {
